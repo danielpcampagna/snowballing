@@ -10,23 +10,26 @@ from contextlib import redirect_stdout, redirect_stderr
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 
-from .collection_helpers import oget, dset
-from .utils import parse_bibtex
-from .snowballing import form_definition, WebNavigator
-from .operations import bibtex_to_info, load_work_map_all_years
-from .operations import work_to_bibtex, reload, find, work_by_varname
-from .operations import should_add_info
-from .operations import invoke_editor, metakey
-from .dbmanager import insert, set_attribute
-from . import config
+from ..collection_helpers import oget, dset
+from ..utils import parse_bibtex
+from ..snowballing import form_definition, WebNavigator
+from ..operations import bibtex_to_info, load_work_map_all_years
+from ..operations import work_to_bibtex, reload, find, work_by_varname, load_work, load_citations
+from ..operations import should_add_info
+from ..operations import invoke_editor, metakey
+from ..dbmanager import insert, set_attribute
+from .. import config
+from .api.endpoints.citations import citations
+from .api.endpoints.converter import converter
 
 if os.getcwd() not in sys.path:
     sys.path.append(os.getcwd())
 
 import database
 
-
 app = Flask(__name__)
+app.register_blueprint(citations, url_prefix="/citations")
+app.register_blueprint(converter, url_prefix="/converter")
 CORS(app)
 
 LOADED_DB = False
@@ -275,8 +278,64 @@ def clear():
         "status": list(STATUS),
     })
 
+@app.route("/database", methods=["GET", "POST"])
+def get_database():
+    global LOADED_DB
+    global SCHOLAR_IDS
+    global CLUSTER_IDS
+    citation = []
+    work = []
 
+    if not LOADED_DB:
+        load_db()
 
+    def general_jsonify(obj):
+        primitive = (int, str, bool, dict, list)
+
+        def is_primitive(thing):
+            return isinstance(thing, primitive)
+
+        if obj is None:
+                return None
+
+        public_keys = [key for key in dir(obj) if not key.startswith("_")]
+        result = dict()
+        for key in public_keys:
+            attribute_value = getattr(obj, key, None)
+            
+            if attribute_value is not None and not callable(attribute_value):
+                result[key] = attribute_value if is_primitive(attribute_value) else general_jsonify(attribute_value)
+        return result
+
+    def prepare_citations(citations):
+        result = dict()
+        for citation in citations:
+            citation_id = citation["citation"].get("ID") or citation["citation"].get("metakey", None)
+            # context = citation["context"]
+            # ref = citation["ref"]
+            work_id = citation["work"]["ID"]
+
+            if citation_id not in result:
+                result[citation_id] = {
+                    # "context": [],
+                    # "ref": [],
+                    "work": [],
+                }
+
+            result[citation_id]["work"].append(work_id)
+        return result
+
+    # SCHOLAR = [general_jsonify(SCHOLAR_IDS[k]) for k in SCHOLAR_IDS]
+    # CLUSTER = [general_jsonify(CLUSTER_IDS[k]) for k in CLUSTER_IDS]
+    citation = prepare_citations([general_jsonify(c) for c in load_citations()])
+    work = [general_jsonify(w) for w in load_work()]
+
+    return jsonify({
+        # "scholar": SCHOLAR,
+        # "cluster": CLUSTER,
+        "citation": citation,
+        "work": work,
+    })
 
 if __name__ == "__main__":
     app.run()
