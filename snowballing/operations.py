@@ -66,6 +66,9 @@ def load_work_map(year):
 
     .. doctest::
 
+        >>> WORK_CACHE = {}
+        >>> sorted([(work.year, key) for key, work in load_work_map(2015)])
+        [(None, None)]
         >>> reload()
         >>> sorted([(work.year, key) for key, work in load_work_map(2015)])
         [(2014, 'murta2014a'), (2015, 'pimentel2015a')]
@@ -75,11 +78,15 @@ def load_work_map(year):
     module = "y{}.py".format(year) if isinstance(year, int) else year
     if module not in WORK_CACHE:
         module = "y9999.py"
-    worklist = WORK_CACHE[module]
-    for key, work in worklist.__dict__.items():
-        if isinstance(work, worklist.Work):
-            oset(work, "metakey", key)
-            yield key, work
+    
+    if module not in WORK_CACHE:
+        yield None, None
+    else:
+        worklist = WORK_CACHE[module]
+        for key, work in worklist.__dict__.items():
+            if isinstance(work, worklist.Work):
+                oset(work, "metakey", key)
+                yield key, work
 
 
 def work_by_varname(varname, year=None):
