@@ -4,7 +4,7 @@ import database
 from flask import Blueprint, request, jsonify
 
 from snowballing.utils import parse_bibtex
-from snowballing.operations import load_citations, bibtex_to_info
+from snowballing.operations import bibtex_to_info
 from snowballing import config
 
 converter = Blueprint("converter", __name__)
@@ -30,7 +30,7 @@ def bibtex():
 
     return jsonify({
         'meta': {
-            'total':      len(result) - len(incomplete),
+            'total':      len(result),
             'errors':     len(incomplete),
             "incomplete": incomplete
         },
