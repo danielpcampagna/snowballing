@@ -21,7 +21,7 @@ from .. import config
 from .endpoints.citations import citations
 from .endpoints.works import works
 from .endpoints.converter import converter
-from .helpers import general_jsonify
+from .helpers import general_jsonify, prepare_citations
 
 if os.getcwd() not in sys.path:
     sys.path.append(os.getcwd())
@@ -290,29 +290,6 @@ def get_database():
 
     if not LOADED_DB:
         load_db()
-
-    def prepare_citations(citations, forward=True):
-        result = dict()
-        for item in citations:
-            work     = item.get("work")
-            citation = item.get("citation")
-            ref      = item.get("ref")
-            context  = item.get("context")
-
-            work_id, metakey_id = (getattr(work, "metakey", None), getattr(citation, "metakey", None))
-            key, value = (metakey_id, work_id) if forward else (work_id, metakey_id)
-
-            if key not in result:
-                result[key] = {
-                    "context": [],
-                    "ref": [],
-                    "work": [],
-                }
-
-            result[key]["context"].append(context)
-            result[key]["ref"].append(ref)
-            result[key]["work"].append(value)
-        return result
 
     SCHOLAR = [general_jsonify(SCHOLAR_IDS[k]) for k in SCHOLAR_IDS]
     CLUSTER = [general_jsonify(CLUSTER_IDS[k]) for k in CLUSTER_IDS]
