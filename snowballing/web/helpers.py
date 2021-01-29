@@ -19,17 +19,25 @@ def general_jsonify(obj):
                 result[key] = general_jsonify(attribute_value)
     return result
 
-def prepare_citations(citations):
-    result = dict()
-    for citation in citations:
-        citation_id = citation["citation"].get("ID") or citation["citation"].get("metakey", None)
-        # context = citation["context"]
-        # ref = citation["ref"]
-        work_id = citation["work"]["ID"]
+def prepare_citations(citations, forward=True):
+        result = dict()
+        for item in citations:
+            work     = item.get("work")
+            citation = item.get("citation")
+            ref      = item.get("ref")
+            context  = item.get("context")
 
-        if citation_id not in result:
-            result[citation_id] = {
-                # "context": [],
-                # "ref": [],
-                "work": [],
-            }
+            work_id, metakey_id = (getattr(work, "metakey", None), getattr(citation, "metakey", None))
+            key, value = (metakey_id, work_id) if forward else (work_id, metakey_id)
+
+            if key not in result:
+                result[key] = {
+                    "context": [],
+                    "ref": [],
+                    "work": [],
+                }
+
+            result[key]["context"].append(context)
+            result[key]["ref"].append(ref)
+            result[key]["work"].append(value)
+        return result
