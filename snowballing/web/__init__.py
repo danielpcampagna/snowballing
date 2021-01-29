@@ -17,18 +17,20 @@ from ..operations import bibtex_to_info, load_work_map_all_years
 from ..operations import work_to_bibtex, reload, find, work_by_varname, load_work, load_citations
 from ..operations import should_add_info
 from ..operations import invoke_editor, metakey
-from ..dbmanager import insert, set_attribute
 from .. import config
-from .api.endpoints.citations import citations
-from .api.endpoints.converter import converter
+from .endpoints.citations import citations
+from .endpoints.works import works
+from .endpoints.converter import converter
+from .helpers import general_jsonify
 
 if os.getcwd() not in sys.path:
     sys.path.append(os.getcwd())
 
-import database
+import database #type: ignore
 
 app = Flask(__name__)
 app.register_blueprint(citations, url_prefix="/citations")
+app.register_blueprint(works, url_prefix="/works")
 app.register_blueprint(converter, url_prefix="/converter")
 CORS(app)
 
@@ -84,7 +86,7 @@ def latex_to_info(latex):
 
 
 def unified_find(info, scholar, latex, db_latex, citation_var, citation_file, backward):
-    try:       
+    try:
         citation_work = work_by_varname(citation_var)
         if citation_var and not citation_work:
             STATUS.add("[Error] Citation var {} not found".format(citation_var))
@@ -161,6 +163,7 @@ def unified_exc(message, reload=False):
     def unified_dec(func):
         @wraps(func)
         def dec():
+            result = dict()
             try:
                 if reload:
                     load_db()
@@ -168,15 +171,15 @@ def unified_exc(message, reload=False):
                 result, work, should_add = unified_find(
                     request.json.get("info"),
                     {
-                        "scholar_id": request.json.get("scholar_id"),
-                        "cluster_id": request.json.get("cluster_id"),
-                        "scholar": request.json.get("scholar"),
-                        "scholar_ok": request.json.get("scholar_ok"),
+                        "scholar_id": request.json.get("scholar_id"), # e.g., "scholar_id": "ucciVefuv0sJ",
+                        "cluster_id": request.json.get("cluster_id"), # e.g., "cluster_id": "5458343950729529273",
+                        "scholar": request.json.get("scholar"),       # e.g., "scholar": "http://scholar.google.com/scholar?cites=5458343950729529273&as_sdt=2005&sciodt=0,5&hl=en",
+                        "scholar_ok": request.json.get("scholar_ok"), # e.g., "scholar_ok": true,
                     },
                     request.json.get("latex"),
                     request.json.get("db_latex"),
                     request.json.get("citation_var"),
-                    request.json.get("citation_file"),
+                    request.json.get("citation_file"),                # e.g., "citation_file": "murta2014a",
                     request.json.get("backward"),
                 )
                 result = func(result, work, should_add)
@@ -283,59 +286,46 @@ def get_database():
     global LOADED_DB
     global SCHOLAR_IDS
     global CLUSTER_IDS
-    citation = []
-    work = []
+    forward = not request.headers.get("Forward", "true").lower() == "false"
 
     if not LOADED_DB:
         load_db()
 
-    def general_jsonify(obj):
-        primitive = (int, str, bool, dict, list)
-
-        def is_primitive(thing):
-            return isinstance(thing, primitive)
-
-        if obj is None:
-                return None
-
-        public_keys = [key for key in dir(obj) if not key.startswith("_")]
+    def prepare_citations(citations, forward=True):
         result = dict()
-        for key in public_keys:
-            attribute_value = getattr(obj, key, None)
-            
-            if attribute_value is not None and not callable(attribute_value):
-                result[key] = attribute_value if is_primitive(attribute_value) else general_jsonify(attribute_value)
-        return result
+        for item in citations:
+            work     = item.get("work")
+            citation = item.get("citation")
+            ref      = item.get("ref")
+            context  = item.get("context")
 
-    def prepare_citations(citations):
-        result = dict()
-        for citation in citations:
-            citation_id = citation["citation"].get("ID") or citation["citation"].get("metakey", None)
-            # context = citation["context"]
-            # ref = citation["ref"]
-            work_id = citation["work"]["ID"]
+            work_id, metakey_id = (getattr(work, "metakey", None), getattr(citation, "metakey", None))
+            key, value = (metakey_id, work_id) if forward else (work_id, metakey_id)
 
-            if citation_id not in result:
-                result[citation_id] = {
-                    # "context": [],
-                    # "ref": [],
+            if key not in result:
+                result[key] = {
+                    "context": [],
+                    "ref": [],
                     "work": [],
                 }
 
-            result[citation_id]["work"].append(work_id)
+            result[key]["context"].append(context)
+            result[key]["ref"].append(ref)
+            result[key]["work"].append(value)
         return result
 
-    # SCHOLAR = [general_jsonify(SCHOLAR_IDS[k]) for k in SCHOLAR_IDS]
-    # CLUSTER = [general_jsonify(CLUSTER_IDS[k]) for k in CLUSTER_IDS]
-    citation = prepare_citations([general_jsonify(c) for c in load_citations()])
-    work = [general_jsonify(w) for w in load_work()]
+    SCHOLAR = [general_jsonify(SCHOLAR_IDS[k]) for k in SCHOLAR_IDS]
+    CLUSTER = [general_jsonify(CLUSTER_IDS[k]) for k in CLUSTER_IDS]
+    citations = prepare_citations([c.__dict__ for c in load_citations()], forward=forward)
+    works = [general_jsonify(w) for w in load_work()]
 
     return jsonify({
-        # "scholar": SCHOLAR,
-        # "cluster": CLUSTER,
-        "citation": citation,
-        "work": work,
+        "scholar": SCHOLAR,
+        "cluster": CLUSTER,
+        "citations": citations,
+        "works": works,
     })
 
 if __name__ == "__main__":
     app.run()
+
