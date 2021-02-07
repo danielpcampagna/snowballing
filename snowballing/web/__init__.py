@@ -9,6 +9,7 @@ from contextlib import redirect_stdout, redirect_stderr
 
 from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
+from flasgger import Swagger
 
 from ..collection_helpers import oget, dset
 from ..utils import parse_bibtex
@@ -33,6 +34,8 @@ app.register_blueprint(citations, url_prefix="/citations")
 app.register_blueprint(works, url_prefix="/works")
 app.register_blueprint(converter, url_prefix="/converter")
 CORS(app)
+
+swagger = Swagger(app)
 
 LOADED_DB = False
 STATUS = set()
@@ -281,24 +284,195 @@ def clear():
         "status": list(STATUS),
     })
 
-@app.route("/database", methods=["GET", "POST"])
+@app.route("/database", methods=["GET"])
 def get_database():
+    """Example endpoint returning a list of works and citations.
+    ---
+    parameters:
+      - in: header
+        name: forward
+        type: boolean
+        required: false
+        default: true
+    definitions:
+      Citation:
+        name: citation
+        type: object
+        example: {
+            "freire2008a": {
+                "context": [
+                    null
+                ],
+                "ref": [
+                    "5"
+                ],
+                "work": [
+                    "murta2014a"
+                ]
+            },
+        }
+        properties:
+          work_identification:
+            type: object
+            description: This object key is the work identification (e.g., "freire2008a").
+            properties:
+              context:
+                type: array
+                description: The context of the n-th work.
+                items:
+                  type: string
+              ref:
+                type: array
+                description: The position in the work references section of the n-th work.
+                items:
+                  type: string
+              work:
+                type: array
+                description: The citations (where header forward is true) / cited list (where header forward is false) of the <work_identification.. (e.g. Where murta2014a cites freire2008a and header "forward" is true, it's expected "murta2014a" be included in this property value)
+                items:
+                  type: string
+      Work:
+        name: work
+        type: object
+        example: {
+            "aliases": [
+                [
+                2015,
+                "noWorkflow: Capturing and Analyzing Provenance of Scripts",
+                "Chirigati, Fernando and Koop, David and Freire, Juliana"
+                ]
+            ],
+            "approach_name": "noWorkflow",
+            "authors": "Murta, Leonardo and Braganholo, Vanessa and Chirigati, Fernando and Koop, David and Freire, Juliana",
+            "category": "snowball",
+            "citation_file": "murta2014a",
+            "cluster_id": "5458343950729529273",
+            "display": "no  Work  flow",
+            "entrytype": "inproceedings",
+            "file": "murta2014a.pdf",
+            "local": "Cologne, Germany",
+            "metakey": "murta2014a",
+            "name": "noWorkflow: capturing and analyzing provenance of scripts",
+            "organization": "Springer",
+            "pp": "71--83",
+            "scholar": "http://scholar.google.com/scholar?cites=5458343950729529273&as_sdt=2005&sciodt=0,5&hl=en",
+            "scholar_id": "ucciVefuv0sJ",
+            "scholar_ok": true,
+            "tracking": "alert",
+            "year": 2014
+        }
+        properties:
+          ID:
+            type: string
+            required: false
+          aliases:
+            type: array
+            required: false
+            items:
+              type: array
+              items:
+                type: string|integer
+          approach_name:
+            type: string
+            required: false
+          authors:
+            type: string
+            required: false
+          category:
+            type: string
+            required: false
+          citation_file:
+            type: string
+            required: false
+          cluster_id:
+            type: string
+            required: false
+          display:
+            type: string
+            required: false
+          doi:
+            type: string
+            required: false
+          due:
+            type: string
+            required: false
+          entrytype:
+            type: string
+            required: false
+          file:
+            type: string
+            required: false
+          local:
+            type: string
+            required: false
+          metakey:
+            type: string
+            required: false
+          month:
+            type: string
+            required: false
+          name:
+            type: string
+            required: false
+          number:
+          organization:
+            type: string
+            required: false
+          pp:
+            type: string
+            required: false
+          publisher:
+            type: string
+            required: false
+          scholar:
+            type: string
+            required: false
+          scholar_id:
+            type: string
+            required: false
+          scholar_ok:
+            type: boolean
+            required: false
+          star:
+            type: string
+            required: false
+          tracking:
+            type: string
+            required: false
+          volume:
+            type: string
+            required: false
+          year:
+            type: string
+            required: false
+    responses:
+      200:
+        description: A JSON array of user names
+        schema:
+          properties:
+            citations:
+              $ref: '#/definitions/Citation'
+            works:
+              type: array
+              items:
+                $ref: '#/definitions/Work'
+    """
     global LOADED_DB
-    global SCHOLAR_IDS
-    global CLUSTER_IDS
+    # global SCHOLAR_IDS
+    # global CLUSTER_IDS
     forward = not request.headers.get("Forward", "true").lower() == "false"
 
     if not LOADED_DB:
         load_db()
 
-    SCHOLAR = [general_jsonify(SCHOLAR_IDS[k]) for k in SCHOLAR_IDS]
-    CLUSTER = [general_jsonify(CLUSTER_IDS[k]) for k in CLUSTER_IDS]
+    # SCHOLAR = [general_jsonify(SCHOLAR_IDS[k]) for k in SCHOLAR_IDS]
+    # CLUSTER = [general_jsonify(CLUSTER_IDS[k]) for k in CLUSTER_IDS]
     citations = prepare_citations([c.__dict__ for c in load_citations()], forward=forward)
     works = [general_jsonify(w) for w in load_work()]
 
     return jsonify({
-        "scholar": SCHOLAR,
-        "cluster": CLUSTER,
+        # "scholar": SCHOLAR,
+        # "cluster": CLUSTER,
         "citations": citations,
         "works": works,
     })
