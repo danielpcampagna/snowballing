@@ -1,0 +1,189 @@
+swagger: '2.0'
+
+################################################################################
+#                              API Information                                 #
+################################################################################
+info:
+  version: '1.0.0'
+  title: Test both cascading $refs and basePath
+  description: |
+    This definition use both cascading $refs and a "non empty" basePath
+
+################################################################################
+#                  Host, Base Path, Schemes and Content Types                  #
+################################################################################
+# The host (name or ip) serving the API
+host: localhost:5000
+
+# The base path on which the API is served, relative to the host. Will be prefixed to all paths. Used to control versioning
+basePath: /api/
+
+# The transfer protocol of the API
+schemes:
+  - http
+# Format of bodies a client can send (Content-Type)
+consumes:
+  - application/json
+# Format of the responses to the client (Accepts)
+produces:
+  - application/json
+
+################################################################################
+#                                    Paths                                     #
+################################################################################
+# paths:
+
+################################################################################
+#                                 Definitions                                  #
+################################################################################
+definitions:
+  Citation:
+    name: citation
+    type: object
+    example: {
+        "freire2008a": {
+            "context": [
+                null
+            ],
+            "ref": [
+                "5"
+            ],
+            "work": [
+                "murta2014a"
+            ]
+        },
+    }
+    properties:
+      work_identification:
+        type: object
+        description: This object key should be the work identification (e.g., "freire2008a").
+        properties:
+          context:
+            type: array
+            description: The context of the n-th work.
+            items:
+              type: string
+          ref:
+            type: array
+            description: The position in the work references section of the n-th work.
+            items:
+              type: string
+          work:
+            type: array
+            description: The citations (where header forward is true) / cited list (where header forward is false) of the <work_identification.. (e.g. Where murta2014a cites freire2008a and header "forward" is true, it's expected "murta2014a" be included in this property value)
+            items:
+              type: string
+  Work:
+    name: work
+    type: object
+    example: {
+        "aliases": [
+            [
+            2015,
+            "noWorkflow: Capturing and Analyzing Provenance of Scripts",
+            "Chirigati, Fernando and Koop, David and Freire, Juliana"
+            ]
+        ],
+        "approach_name": "noWorkflow",
+        "authors": "Murta, Leonardo and Braganholo, Vanessa and Chirigati, Fernando and Koop, David and Freire, Juliana",
+        "category": "snowball",
+        "citation_file": "murta2014a",
+        "cluster_id": "5458343950729529273",
+        "display": "no  Work  flow",
+        "entrytype": "inproceedings",
+        "file": "murta2014a.pdf",
+        "local": "Cologne, Germany",
+        "metakey": "murta2014a",
+        "name": "noWorkflow: capturing and analyzing provenance of scripts",
+        "organization": "Springer",
+        "pp": "71--83",
+        "scholar": "http://scholar.google.com/scholar?cites=5458343950729529273&as_sdt=2005&sciodt=0,5&hl=en",
+        "scholar_id": "ucciVefuv0sJ",
+        "scholar_ok": true,
+        "tracking": "alert",
+        "year": 2014
+    }
+    properties:
+      ID:
+        type: string
+        required: false
+      aliases:
+        type: array
+        required: false
+        items:
+          type: array
+          items:
+            type: string|integer
+      approach_name:
+        type: string
+        required: false
+      authors:
+        type: string
+        required: false
+      category:
+        type: string
+        required: false
+      citation_file:
+        type: string
+        required: false
+      cluster_id:
+        type: string
+        required: false
+      display:
+        type: string
+        required: false
+      doi:
+        type: string
+        required: false
+      due:
+        type: string
+        required: false
+      entrytype:
+        type: string
+        required: false
+      file:
+        type: string
+        required: false
+      local:
+        type: string
+        required: false
+      metakey:
+        type: string
+        required: false
+      month:
+        type: string
+        required: false
+      name:
+        type: string
+        required: false
+      number:
+      organization:
+        type: string
+        required: false
+      pp:
+        type: string
+        required: false
+      publisher:
+        type: string
+        required: false
+      scholar:
+        type: string
+        required: false
+      scholar_id:
+        type: string
+        required: false
+      scholar_ok:
+        type: boolean
+        required: false
+      star:
+        type: string
+        required: false
+      tracking:
+        type: string
+        required: false
+      volume:
+        type: string
+        required: false
+      year:
+        type: string
+        required: false

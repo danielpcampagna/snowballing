@@ -1,4 +1,4 @@
-import os
+import os, re
 from setuptools import setup, find_packages
 
 
@@ -9,6 +9,9 @@ def recursive_path(pack, path):
             matches.append(os.path.join(root, filename)[len(pack) + 1:])
     return matches
 
+def web_documentation(pack, path):
+    patterns = re.compile(r'.*\.(ya?ml)')
+    return [path for path in recursive_path(pack, path) if patterns.match(path) is not None]
 
 try:
     import pypandoc
@@ -27,8 +30,9 @@ setup(
     packages=find_packages(),
     package_data={
         "snowballing": (
-            recursive_path("snowballing", "example")
-        ),
+            recursive_path("snowballing", "example") +
+            web_documentation("snowballing", "web")
+        )
     },
     author=("Joao Felipe Pimentel",),
     author_email="joaofelipenp@gmail.com",
