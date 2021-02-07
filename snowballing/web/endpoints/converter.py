@@ -1,5 +1,5 @@
 import importlib
-import database
+import database #type: ignore
 
 from flask import Blueprint, request, jsonify
 

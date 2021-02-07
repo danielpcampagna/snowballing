@@ -103,7 +103,7 @@ def unified_find(info, scholar, latex, db_latex, citation_var, citation_file, ba
             info = latex_to_info(work_to_bibtex(work))
         
         pyref = None
-        if info is not None:
+        if info is not None and type(info) is dict:
             for key, value in scholar.items():
                 if value is not None:
                     info[config.SCHOLAR_MAP.get(key, key)] = value
@@ -135,7 +135,7 @@ def unified_find(info, scholar, latex, db_latex, citation_var, citation_file, ba
             if not latex:
                 latex = db_latex
             if pyref is None:
-                pyref = work.metakey
+                pyref = getattr(work, 'metakey')
 
         
         return {
