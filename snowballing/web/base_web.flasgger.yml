@@ -5,9 +5,8 @@ swagger: '2.0'
 ################################################################################
 info:
   version: '1.0.0'
-  title: Test both cascading $refs and basePath
-  description: |
-    This definition use both cascading $refs and a "non empty" basePath
+  title: Snowballing Web
+  description: Use this documentation to know how to use all endpoints.
 
 ################################################################################
 #                  Host, Base Path, Schemes and Content Types                  #
@@ -16,7 +15,7 @@ info:
 host: localhost:5000
 
 # The base path on which the API is served, relative to the host. Will be prefixed to all paths. Used to control versioning
-basePath: /api/
+basePath: /
 
 # The transfer protocol of the API
 schemes:
