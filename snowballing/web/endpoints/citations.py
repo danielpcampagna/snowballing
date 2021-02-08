@@ -12,8 +12,37 @@ citations = Blueprint("citations", __name__)
 importlib.reload(database)
 
 @citations.route("", methods=["POST"])
-@citations.route("/", methods=["POST"])
 def create():
+    """
+    Use this endpoint to create a new citation.
+    ---
+    # parameters:
+    #     - in: body
+    #         name: body
+    #         required: true
+    #         schema:
+    #             type: object
+    #             properties:
+    #                 workref:
+    #                     type: string
+    #                     description: The identity of the work from which citation(s) will be created.
+    #                 backwards:
+    #                     type: array
+    #                     description: An list of identities of work(s) which the base work cites.
+    #                     items:
+    #                         type: string
+    #                 forwards:
+    #                     type: array
+    #                     description: An list of identities of work(s) which cite the base work.
+    #                     items:
+    #                         type: string
+    responses:
+        200:
+            description: A JSON object with new Citations.
+            schema:
+                $ref: '#/definitions/Citation'
+            
+    """
 
     workref           = request.json.pop('workref')
     backward_workrefs = request.json.pop('backwards', None)

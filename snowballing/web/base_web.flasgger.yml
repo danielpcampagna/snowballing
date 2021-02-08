@@ -30,7 +30,34 @@ produces:
 ################################################################################
 #                                    Paths                                     #
 ################################################################################
-# paths:
+paths:
+  /citations:
+    post:
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            example: {
+              "workref": "pimentel2015b",
+              "backwards": ["murta2014a"],
+              "forwards": ["ujcich2018c"]
+            }            
+            properties:
+              workref:
+                type: string
+                description: The identity of the work from which citation(s) will be created.
+              backwards:
+                type: array
+                description: An list of identities of work(s) which the base work cites.
+                items:
+                  type: string
+              forwards:
+                type: array
+                description: An list of identities of work(s) which cite the base work.
+                items:
+                  type: string
 
 ################################################################################
 #                                 Definitions                                  #
