@@ -52,7 +52,7 @@ def search(args):
     try:
         sys.path.append(os.getcwd())
 
-        import database
+        import database #type: ignore
         from .operations import load_work, work_to_bibtex, reload, find
         reload()
         results = {x for x in find(args.query)}
@@ -68,7 +68,7 @@ def web(args):
     """ Start web server """
     try:
         sys.path.append(os.getcwd())
-        import database
+        import database #type: ignore
         my_env = os.environ.copy()
         print(os.path.join(os.path.dirname(__file__), "web.py"))
         my_env["FLASK_APP"] = os.path.join(os.path.dirname(__file__), "web.py")
@@ -89,7 +89,7 @@ def ref(args):
     try:
         sys.path.append(os.getcwd())
 
-        import database
+        import database #type: ignore
         from .operations import work_by_varname, work_to_bibtex, reload
         reload()
         work = work_by_varname(args.varname)

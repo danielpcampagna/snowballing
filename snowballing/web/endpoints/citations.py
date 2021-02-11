@@ -11,40 +11,8 @@ import database #type: ignore
 citations = Blueprint("citations", __name__)
 importlib.reload(database)
 
-@citations.route("", methods=["POST"])
-def create():
-    """
-    Use this endpoint to create a new citation.
-    ---
-    # parameters:
-    #     - in: body
-    #         name: body
-    #         required: true
-    #         schema:
-    #             type: object
-    #             properties:
-    #                 workref:
-    #                     type: string
-    #                     description: The identity of the work from which citation(s) will be created.
-    #                 backwards:
-    #                     type: array
-    #                     description: An list of identities of work(s) which the base work cites.
-    #                     items:
-    #                         type: string
-    #                 forwards:
-    #                     type: array
-    #                     description: An list of identities of work(s) which cite the base work.
-    #                     items:
-    #                         type: string
-    responses:
-        200:
-            description: A JSON object with new Citations.
-            schema:
-                $ref: '#/definitions/Citation'
-            
-    """
-
-    workref           = request.json.pop('workref')
+@citations.route("/<work_id>", methods=["POST"])
+def create(work_id):
     backward_workrefs = request.json.pop('backwards', None)
     forward_workrefs  = request.json.pop('forwards', None)
     result = {
@@ -60,39 +28,37 @@ def create():
 
     for work in backward_workrefs:
         cited = {'pyref': work}
-        code = citation_text(workref=workref, cited=cited, backward=True)
+        code = citation_text(workref=work_id, cited=cited, backward=True)
         insert_result = insert(code, citations=work).get("citations", [[]])[0]
         result['backwards'].append(result_format(
-                    work=workref,
+                    work=work_id,
                     cited=work,
                     result=insert_result[3] if len(insert_result) == 4 else False,
                 ))
     
     for work in forward_workrefs:
         cited = {'pyref': work}
-        code = citation_text(workref=workref, cited=cited)
+        code = citation_text(workref=work_id, cited=cited)
         insert_result = insert(code, citations=work).get("citations", [[]])[0]
         result['forwards'].append(result_format(
                     work=work,
-                    cited=workref,
+                    cited=work_id,
                     result=insert_result[3] if len(insert_result) == 4 else False,
                 ))
 
     return result
 
-@citations.route("/", methods=["GET"], defaults={"citation_id": None})
-@citations.route("/<citation_id>/", methods=["GET"])
-def read(citation_id):
+@citations.route("/", methods=["GET"], defaults={"work_id": None})
+@citations.route("/<work_id>", methods=["GET"])
+def read(work_id):
     forward = not request.headers.get("Forward", "true").lower() == "false"
-
-    if citation_id is not None:
-        return f"Only the citation with ID {citation_id}"
     
     citations = prepare_citations([c.__dict__ for c in load_citations()], forward=forward)
     if len(citations) == 0:
         reload()
         citations = prepare_citations([c.__dict__ for c in load_citations()], forward=forward)
 
-    return jsonify({
-        "citations": citations
-    })
+    if work_id is not None:
+        citations = {key: obj for key, obj in citations.items() if key == work_id}
+
+    return jsonify(citations)

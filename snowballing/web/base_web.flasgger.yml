@@ -32,32 +32,65 @@ produces:
 ################################################################################
 paths:
   /citations:
+    get:
+      description: Use this endpoint to obtain all citations.
+      responses:
+        200:
+          description: A JSON object with Citations.
+          schema:
+            $ref: '#/definitions/Citation'
+  /citations/{work_id}:
     post:
+      description: Use this endpoint to create a new citation.
       parameters:
+        - in: path
+          name: work_id
+          required: true
+          description: The identity of the base work from which citations will be created.
+          schema:
+            type: string
+            example: "pimentel2015b"
         - in: body
           name: body
           required: true
           schema:
             type: object
             example: {
-              "workref": "pimentel2015b",
-              "backwards": ["murta2014a"],
-              "forwards": ["ujcich2018c"]
-            }            
+              "backward": ["murta2014a"],
+              "forward": ["ujcich2018c"]
+            }
             properties:
               workref:
-                type: string
-                description: The identity of the work from which citation(s) will be created.
-              backwards:
+              backward:
                 type: array
-                description: An list of identities of work(s) which the base work cites.
+                description: A list of identities of works that the base work cites.
                 items:
                   type: string
-              forwards:
+              forward:
                 type: array
-                description: An list of identities of work(s) which cite the base work.
+                description: A list of identities of works that cite base work.
                 items:
                   type: string
+      responses:
+        200:
+          description: A JSON object with the new Citations.
+          schema:
+            $ref: '#/definitions/Citation'
+    get:
+      description: Use this endpoint to obtain a specific citations about a work.
+      parameters:
+        - in: path
+          name: work_id
+          required: true
+          description: The identity of the base work from which citations will be created.
+          schema:
+            type: string
+            example: "pimentel2015b"
+      responses:
+        200:
+          description: A JSON object with Citations.
+          schema:
+            $ref: '#/definitions/Citation'
 
 ################################################################################
 #                                 Definitions                                  #
