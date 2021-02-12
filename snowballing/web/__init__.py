@@ -33,7 +33,7 @@ app.register_blueprint(works, url_prefix="/works")
 # app.register_blueprint(converter, url_prefix="/converter")
 CORS(app)
 
-swagger_description = 'base_web.flasgger.yml'
+swagger_description = 'api.flasgger.yml'
 swagger = Swagger(app, template_file=swagger_description)
 
 LOADED_DB = False
