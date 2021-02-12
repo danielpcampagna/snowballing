@@ -11,17 +11,15 @@ from flask import Flask, jsonify, request, render_template
 from flask_cors import CORS
 from flasgger import Swagger
 
-from ..collection_helpers import oget, dset
-from ..utils import parse_bibtex
-from ..snowballing import form_definition, WebNavigator
-from ..operations import bibtex_to_info, load_work_map_all_years
-from ..operations import work_to_bibtex, reload, find, work_by_varname, load_work, load_citations
-from ..operations import should_add_info
-from ..operations import invoke_editor, metakey
-from .. import config
-from .endpoints.citations import citations
-from .endpoints.works import works
-from .endpoints.converter import converter
+from snowballing.collection_helpers import oget, dset
+from snowballing.utils import parse_bibtex
+from snowballing.snowballing import form_definition, WebNavigator
+from snowballing.operations import bibtex_to_info, load_work_map_all_years, _clear_db
+from snowballing.operations import work_to_bibtex, reload, find, work_by_varname, load_work, load_citations
+from snowballing.operations import should_add_info
+from snowballing.operations import invoke_editor, metakey
+from snowballing import config
+from .endpoints.routes import *
 from .helpers import general_jsonify, prepare_citations
 
 if os.getcwd() not in sys.path:
@@ -32,7 +30,7 @@ import database #type: ignore
 app = Flask(__name__)
 app.register_blueprint(citations, url_prefix="/citations")
 app.register_blueprint(works, url_prefix="/works")
-app.register_blueprint(converter, url_prefix="/converter")
+# app.register_blueprint(converter, url_prefix="/converter")
 CORS(app)
 
 swagger_description = 'base_web.flasgger.yml'
@@ -285,9 +283,9 @@ def clear():
         "status": list(STATUS),
     })
 
-@app.route("/database", methods=["GET"])
+@app.route("/database/", methods=["GET"])
 def get_database():
-    """Example endpoint returning a list of works and citations.
+    """Use to obtain a list of works and a list of citations.
     ---
     parameters:
       - in: header

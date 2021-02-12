@@ -21,8 +21,10 @@ basePath: /
 schemes:
   - http
 # Format of bodies a client can send (Content-Type)
+# consumes: [ 'text/plain', 'application/json', 'application/xml', 'text/bibtex' ]
 consumes:
   - application/json
+  - text/plain
 # Format of the responses to the client (Accepts)
 produces:
   - application/json
@@ -31,7 +33,11 @@ produces:
 #                                    Paths                                     #
 ################################################################################
 paths:
-  /citations:
+#------------------------------------------------------------------------------#
+#                                  Citations                                   #
+#------------------------------------------------------------------------------#
+
+  /citations/:
     get:
       description: Use this endpoint to obtain all citations.
       responses:
@@ -39,7 +45,7 @@ paths:
           description: A JSON object with Citations.
           schema:
             $ref: '#/definitions/Citation'
-  /citations/{work_id}:
+  /citations/{work_id}/:
     post:
       description: Use this endpoint to create a new citation.
       parameters:
@@ -73,7 +79,7 @@ paths:
                   type: string
       responses:
         200:
-          description: A JSON object with the new Citations.
+          description: A JSON object with the new citations.
           schema:
             $ref: '#/definitions/Citation'
     get:
@@ -88,10 +94,151 @@ paths:
             example: "pimentel2015b"
       responses:
         200:
-          description: A JSON object with Citations.
+          description: A JSON object with citations.
           schema:
             $ref: '#/definitions/Citation'
-
+#------------------------------------------------------------------------------#
+#                                    Works                                     #
+#------------------------------------------------------------------------------#
+  /works/:
+    get:
+      description: Use this endpoint to obtain all works.
+      responses:
+        200:
+          description: A JSON object with works.
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Work'
+    post:
+      description: Use this endpoint to create a new work.
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: '#/definitions/Work'
+      responses:
+        204:
+          description: Such work was persisted.
+  /works/{work_id}/:
+    get:
+      description: Use this endpoint to obtain a specific work.
+      parameters:
+        - in: path
+          name: work_id
+          required: true
+          description: The identity of the base work from which citations will be created.
+          schema:
+            type: string
+            example: "pimentel2015b"
+      responses:
+        200:
+          description: A JSON object with work.
+          schema:
+            $ref: '#/definitions/Work'
+  /works/validate/:
+    post:
+      parameters:
+        - in: body
+          name: body
+          required: true
+          description: Use this route to validate a json format
+          schema:
+            type: object
+            example: [{
+                      "ID": "ujcich2018provenance",
+                      "_work_type": "Work",
+                      "authors": "Ujcich, Benjamin E and Bates, Adam and Sanders, William H",
+                      "display": "ujcich",
+                      "entrytype": "inproceedings",
+                      "name": "A provenance model for the European union general data protection regulation",
+                      "organization": "Springer",
+                      "place": "IPAW",
+                      "place1": "International Provenance and Annotation Workshop",
+                      "pp": "45--57",
+                      "pyref": "ujcich2018a",
+                      "year": 2018
+                    },
+                    {
+                    "ID": "murta2014noworkflow",
+                    "_work_type": "Work",
+                    "authors": "Murta, Leonardo and Braganholo, Vanessa and Chirigati, Fernando and Koop, David and Freire, Juliana",
+                    "display": "murta",
+                    "entrytype": "inproceedings",
+                    "name": "noWorkflow: capturing and analyzing provenance of scripts",
+                    "organization": "Springer",
+                    "pp": "71--83",
+                    "pyref": "murta2014a",
+                    "year": 2014
+                    }]
+      responses:
+        204:
+          description: All articles are valid.
+        200:
+          description: There are articles invalid.
+          type: list
+          items:
+            type: object
+            properties:
+              article:
+                type: object
+              valid:
+                type: boolean
+              warnings:
+                type: array
+                items:
+                  type: string
+  /works/convert/:
+    post:
+      parameters:
+        - in: body
+          name: body
+          required: true
+          description: Use this route to convert bibtex to json
+          consumes:
+            - text/plain
+          schema:
+            type: string
+            example: "@inproceedings{ujcich2018provenance,\n
+                    \t title={A provenance model for the European union general data protection regulation},\n
+                    \t author={Ujcich, Benjamin E and Bates, Adam and Sanders, William H},\n
+                    \t booktitle={International Provenance and Annotation Workshop},\n
+                    \t pages={45--57},\n
+                    \t year={2018},\n
+                    \t organization={Springer}\n
+                    }\n
+                    @inproceedings{murta2014noworkflow,\n
+                    \t title={noWorkflow: capturing and analyzing provenance of scripts},\n
+                    \t author={Murta, Leonardo and Braganholo, Vanessa and Chirigati, Fernando and Koop, David and Freire, Juliana},\n
+                    \t booktitle={International Provenance and Annotation Workshop},\n
+                    \t pages={71--83},\n
+                    \t year={2014},\n
+                    \t organization={Springer}\n
+                    }"
+      responses:
+        200:
+          description: A JSON object with work.
+          schema:
+            type: object
+            properties:
+              meta:
+                type: object
+                description: Metadata concerning such conversion.
+                properties:
+                  total:
+                    type: integer
+                  errors:
+                    type: integer
+                  incomplete:
+                    type: array
+                    items:
+                      type: object
+              data:
+                description: A list of works in JSON format.
+                type: array
+                items:
+                  type: object
 ################################################################################
 #                                 Definitions                                  #
 ################################################################################
