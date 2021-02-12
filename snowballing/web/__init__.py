@@ -19,7 +19,7 @@ from snowballing.operations import work_to_bibtex, reload, find, work_by_varname
 from snowballing.operations import should_add_info
 from snowballing.operations import invoke_editor, metakey
 from snowballing import config
-from .endpoints.routes import *
+from .api.routes import *
 from .helpers import general_jsonify, prepare_citations
 
 if os.getcwd() not in sys.path:

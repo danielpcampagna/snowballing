@@ -1,6 +1,6 @@
 __all__ = ["works"]
 
-from snowballing.web.endpoints.controllers.work import WorkController
+from ..controllers import WorkController
 from flask import Blueprint, json, request, jsonify, make_response, current_app
 
 from ..controllers import WorkController
