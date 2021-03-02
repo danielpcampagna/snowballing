@@ -31,6 +31,7 @@ setup(
     package_data={
         "snowballing": (
             recursive_path("snowballing", "example") +
+            recursive_path("snowballing", "extension") +
             web_documentation("snowballing", "web")
         )
     },
